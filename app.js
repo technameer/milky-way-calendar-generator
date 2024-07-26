@@ -102,10 +102,18 @@ function displayResults(lowestPoint, highestPoints) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML += `
         
-        <p>Lowest Point: ${lowestPoint.elevation.toFixed(2)} meters at (${lowestPoint.location.lat().toFixed(6)}, ${lowestPoint.location.lng().toFixed(6)})</p>
-        ${highestPoints.map((point, index) => `<div style="background: #28a745;color: white;padding: 10px;border-radius: 10px;margin-bottom:10px;cursor:pointer;" class="list-point-div"><p class="list-point" data-point="${index}"><strong>Highest Point ${index + 1}: </strong> ${point.elevation.toFixed(2)} meters at (${point.location.lat().toFixed(6)}, ${point.location.lng().toFixed(6)})</p></div>`).join('')}
-    `;
-    console.log(highestPoints)
+        <p class="lowest-point-list"><strong>Lowest Point: </strong> ${lowestPoint.elevation.toFixed(2)} meters at (${lowestPoint.location.lat().toFixed(6)}, ${lowestPoint.location.lng().toFixed(6)})</p>
+        ${highestPoints.map((point, index) => `
+            <div class="list-point-div">
+                <div class="list-point-number">${index + 1}</div>
+                <div class="list-point-content">
+                    <p class="list-point" data-point="${index}">
+                        <strong>Highest Point: </strong>
+                        ${point.elevation.toFixed(2)} meters at (${point.location.lat().toFixed(6)}, ${point.location.lng().toFixed(6)})
+                    </p>
+                </div>
+            </div>
+        `).join('')}    `;
 }
 
 function generateRoutes(lowestPoint, highestPoints) {
@@ -113,6 +121,19 @@ function generateRoutes(lowestPoint, highestPoints) {
         const waypoint = generateWaypoint(lowestPoint.location, highestPoint.location, index);
         calculateAndDisplayRoute(lowestPoint.location, highestPoint.location, waypoint, index);
     });
+}
+function openGoogleMaps(startLat, startLng, endLat, endLng, waypointsStr) {
+
+    let url = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLng}&destination=${endLat},${endLng}&travelmode=walking`;
+    const waypoints = waypointsStr
+    if (waypoints && waypoints.length > 0) {
+        url += '&waypoints=';
+        console.log(waypoints)
+        const waypointStrs = waypoints.map(wp => `${wp.location.lat},${wp.location.lng}`);
+        url += waypointStrs.join('|');
+    }
+
+    window.open(url, '_blank');
 }
 
 function generateWaypoint(start, end, index) {
@@ -234,7 +255,7 @@ function calculateAndDisplayRoute(start, end, waypoint, index) {
         }
     });
 
-    new google.maps.Marker({
+    const startMarker = new google.maps.Marker({
         position: start,
         map: map,
         title: `Start of Routes`,
@@ -255,7 +276,7 @@ function calculateAndDisplayRoute(start, end, waypoint, index) {
             let currentStepIndex = 0;
             let infoWindowOpen = false;
             const polylines = [];
-            const listDivs = document.querySelectorAll(".list-point-div");
+            const listDivs = document.querySelectorAll(".list-point-div .list-point-content");
             listDivs[index].innerHTML += '<p><strong>Address: </strong>' + leg.end_address + '</p>'
             const endMarker = new google.maps.Marker({
                 position: end,
@@ -263,17 +284,47 @@ function calculateAndDisplayRoute(start, end, waypoint, index) {
                 title: `End of Route ${index + 1}`,
                 label: `H${index + 1}`
             });
+            let startMarkerPos = startMarker.getPosition();
+            let endMarkerPos = endMarker.getPosition();
+            const waypoints = [{ location: waypoint, stopover: false }];
+            const waypointsStr = encodeURIComponent(JSON.stringify(waypoints));
+        
+            listDivs[index].innerHTML += `
+                <button class="map-button" data-start="${startMarkerPos.lat()},${startMarkerPos.lng()}" data-end="${endMarkerPos.lat()},${endMarkerPos.lng()}" data-waypoints="${waypointsStr}">
+                    Open With Google Maps
+                </button>`;
             
-            
+                    
             const infoWindow = new google.maps.InfoWindow();
-            listPoints[index].addEventListener("click",(e)=>{
-                infoWindow.close()
-                clearPolylines()
-                google.maps.event.trigger(endMarker, 'click');
-                setTimeout(()=>{
-                    document.getElementById("showStepsBtn").click()
-                },50)
-            })
+            listPoints[index].addEventListener("click", (e) => {
+                if (e.target.classList.contains('map-button')) {
+                    if (e.target.classList.contains('map-button')) {
+                        const button = e.target;
+                        const start = button.getAttribute('data-start').split(',');
+                        const end = button.getAttribute('data-end').split(',');
+                        const waypointsStr = button.getAttribute('data-waypoints');
+                
+
+                        const waypoints = JSON.parse(decodeURIComponent(waypointsStr));
+                        openGoogleMaps(
+                            parseFloat(start[0]), 
+                            parseFloat(start[1]), 
+                            parseFloat(end[0]), 
+                            parseFloat(end[1]), 
+                            waypoints)
+                    }
+                }
+                if (e.target.tagName.toLowerCase() !== 'button') {
+                    console.log(e.target);
+                    infoWindow.close();
+                    clearPolylines();
+                    google.maps.event.trigger(endMarker, 'click');
+                    setTimeout(() => {
+                        document.getElementById("showStepsBtn").click();
+                    }, 50);
+                }
+            });
+            
     
             function updateStepInfo(stepIndex ) {
                 const step = leg.steps[stepIndex];
@@ -299,7 +350,8 @@ function calculateAndDisplayRoute(start, end, waypoint, index) {
                 document.getElementById('prevStepBtn').onclick = previousStep;
                 document.getElementById('nextStepBtn').onclick = nextStep;
             }
-    
+
+
             function highlightStep(stepIndex) {
                 clearPolylines();
                 leg.steps.forEach((step, idx) => {
@@ -430,7 +482,7 @@ function calculateAndDisplayRoute(start, end, waypoint, index) {
     });
 }
   
-  // Example usage:
+// Example usage:
 //   getPostalAddress(60.29054785500306, -109.86553068980447).then(encodedAddress => {
 //     console.log('URL Encoded Address:', encodedAddress);
 //     renderVideo(encodedAddress).then(data => {
