@@ -125,7 +125,8 @@
         }
         .lowest-point-list{
             display: flex;
-            align-items: center;
+            flex-direction: column;
+            align-items: start;
             background: #454db6;
             color: white;
             padding: 10px;
@@ -190,11 +191,11 @@
 <body>
     <h1>Find Hiking Routes</h1>
     <form id="routeForm">
-        <label for="city">City:</label>
+        <label for="city">Location:</label>
         <input type="text" id="city" name="city" required>
         <label for="radius">Radius (miles):</label>
         <input type="number" id="radius" name="radius" required>
-        <label for="points">Points:</label>
+        <label for="points">No of routes:</label>
         <input type="number" id="points" name="points" required>
         <button type="submit">Find Routes</button>
     </form>
@@ -202,9 +203,6 @@
     <div class="display">
         <div id="results">
             <h2>Results</h2>
-        </div>
-        <div id="problems">
-            <h2>Problems</h2>
         </div>
     </div>
 </body>
