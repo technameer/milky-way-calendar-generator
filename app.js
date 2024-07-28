@@ -102,7 +102,7 @@ function displayResults(lowestPoint, highestPoints) {
     const resultsDiv = document.getElementById('results');
     resultsDiv.innerHTML += `
         
-        <p class="lowest-point-list"><strong>Lowest Point: </strong> ${lowestPoint.elevation.toFixed(2)} meters at (${lowestPoint.location.lat().toFixed(6)}, ${lowestPoint.location.lng().toFixed(6)})</p>
+        <div class="lowest-point-list"><p><strong>Lowest Point: </strong> ${lowestPoint.elevation.toFixed(2)} meters at (${lowestPoint.location.lat().toFixed(6)}, ${lowestPoint.location.lng().toFixed(6)})</p></div>
         ${highestPoints.map((point, index) => `
             <div class="list-point-div">
                 <div class="list-point-number">${index + 1}</div>
@@ -121,6 +121,7 @@ function generateRoutes(lowestPoint, highestPoints) {
         const waypoint = generateWaypoint(lowestPoint.location, highestPoint.location, index);
         calculateAndDisplayRoute(lowestPoint.location, highestPoint.location, waypoint, index);
     });
+    getMarkerAddress(lowestPoint.location);
 }
 function openGoogleMaps(startLat, startLng, endLat, endLng, waypointsStr) {
 
@@ -242,9 +243,24 @@ async function getPostalAddress(lat, lng) {
         return null; 
     }
 }
+function getMarkerAddress(position) {
+    const geocoder = new google.maps.Geocoder();
+    const lowestPointDiv = document.querySelector(".lowest-point-list")
+    geocoder.geocode({ location: position }, (results, status) => {
+      if (status === 'OK') {
+        if (results[0]) {
+            const address = results[0].formatted_address;
+            lowestPointDiv.innerHTML += '<p><strong>Address: </strong>' + address + '</p>'
+        } else {
+          console.log('No results found');
+        }
+      } else {
+        console.log('Geocoder failed due to: ' + status);
+      }
+    });
+  }
 function calculateAndDisplayRoute(start, end, waypoint, index) {
-    const problemsDiv = document.getElementById('problems');
-
+    const listPointDivs = document.querySelectorAll(".list-point-div .list-point-content");
     const directionsRenderer = new google.maps.DirectionsRenderer({
         map: map,
         suppressMarkers: true,
@@ -476,7 +492,7 @@ function calculateAndDisplayRoute(start, end, waypoint, index) {
             });
     
         } else {
-            problemsDiv.innerHTML += `<p>Route Not found for Route ${index + 1}: ${status}</p>`;
+            listPointDivs[index].innerHTML += `<p>Route Not found for this point: ${status}</p>`;
             console.error(`Route ${index + 1} not found: ${status}`);
         }
     });
