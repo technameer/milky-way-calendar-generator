@@ -67,19 +67,21 @@ function addWaterfalls(center){
 
 function getElevations(locations, noOfPoints) {
     const elevator = new google.maps.ElevationService();
-
-    elevator.getElevationForLocations({ 'locations': locations }, function(results, status) {
-        if (status === google.maps.ElevationStatus.OK) {
-            if (results) {
-                const sortedPoints = results.sort((a, b) => a.elevation - b.elevation);
-                const highestPoints = sortedPoints.slice(-noOfPoints).reverse();
-                displayWaterFallsResults(lowestPoint, highestPoints);
-                generateWaterFallRoutes(lowestPoint, highestPoints);
+    setTimeout(()=>{
+        elevator.getElevationForLocations({ 'locations': locations }, function(results, status) {
+            if (status === google.maps.ElevationStatus.OK) {
+                if (results) {
+                    const sortedPoints = results.sort((a, b) => a.elevation - b.elevation);
+                    const highestPoints = sortedPoints.slice(-noOfPoints).reverse();
+                    displayWaterFallsResults(lowestPoint, highestPoints);
+                    generateWaterFallRoutes(lowestPoint, highestPoints);
+                }
+            } else {
+                alert('Elevation service failed due to: ' + status);
             }
-        } else {
-            alert('Elevation service failed due to: ' + status);
-        }
-    });
+        });
+
+    },1000)
 }
 function geocodeCity(city, radius) {
     const geocoder = new google.maps.Geocoder();
