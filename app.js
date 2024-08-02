@@ -4,6 +4,7 @@ let radiusCircle;
 let directionsService;
 let noOfPoints;
 let infoWindowListeners = []
+let currentInfoWindow = null; 
 
 document.getElementById('routeForm').addEventListener('submit', function(event) {
     event.preventDefault();
@@ -18,10 +19,69 @@ function initMap() {
         zoom: 8,
         center: { lat: 0, lng: 0 }
     });
-
-    directionsService = new google.maps.DirectionsService();
 }
+function createMarker(place) {
+    const markerIcon = {
+        url: 'https://maps.google.com/mapfiles/kml/shapes/waterfalls.png', 
+        scaledSize: new google.maps.Size(32, 32) 
+    };
+    const marker = new google.maps.Marker({
+        map: map,
+        position: place.geometry.location,
+        icon: markerIcon
+    });
+    const photoUrl = place.photos ? place.photos[0].getUrl({ maxWidth: 200 }) : '';
 
+    const infowindowContent = `
+    <div>
+        <h3>${place.name}</h3>
+        ${photoUrl ? `<img src="${photoUrl}" alt="${place.name}" style="width:100%; max-width:200px; height:auto;"/>` : ''}
+        <p><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}" target="_blank">Open in Google Maps</a></p>
+    </div>
+    `;
+    const infowindow = new google.maps.InfoWindow({
+        content: infowindowContent
+    });
+    google.maps.event.addListener(marker, 'click', function() {
+        // Close the currently open InfoWindow if any
+        if (currentInfoWindow) {
+            currentInfoWindow.close();
+        }
+
+        // Open the clicked marker's InfoWindow
+        if (currentInfoWindow === infowindow) {
+            infowindow.close();
+            currentInfoWindow = null; // Reset if the same InfoWindow is clicked again
+        } else {
+            infowindow.open(map, marker);
+            currentInfoWindow = infowindow; // Set the currently open InfoWindow
+        }
+    });
+}
+function addWaterfalls(center){
+    directionsService = new google.maps.DirectionsService();
+
+    const service = new google.maps.places.PlacesService(map);
+    const request = {
+        location: center,
+        radius: radiusCircle.getRadius(), 
+        query: 'waterfall'
+    };
+
+    service.textSearch(request, function(results, status) {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+            for (let i = 0; i < results.length; i++) {
+                const place = results[i];
+                if (google.maps.geometry.spherical.computeDistanceBetween(center, place.geometry.location) <= radiusCircle.getRadius()) {
+                    createMarker(place);
+                }
+            }
+            map.setCenter(results[0].geometry.location);
+        } else {
+            console.error('Waterfalls not found:', status);
+        }
+    });
+}
 function geocodeCity(city, radius) {
     const geocoder = new google.maps.Geocoder();
     geocoder.geocode({ 'address': city }, function(results, status) {
@@ -50,6 +110,7 @@ function geocodeCity(city, radius) {
             radiusCircle.bindTo('center', cityMarker, 'position');
 
             getElevationPoints(location, radius);
+            addWaterfalls(location)
         } else {
             alert('Geocode was not successful for the following reason: ' + status);
         }
@@ -497,6 +558,32 @@ function calculateAndDisplayRoute(start, end, waypoint, index) {
         }
     });
 }
+// async function findPlaces(lat,lng) {
+//     const { Place } = await google.maps.importLibrary("places");
+//     const request = {
+//         textQuery: "Tacos in Mountain View",
+//         fields: ["displayName", "location", "businessStatus"],
+//         includedType: "restaurant",
+//         locationBias: { lat: 37.4161493, lng: -122.0812166 },
+//         isOpenNow: true,
+//         language: "en-US",
+//         maxResultCount: 8,
+//         minRating: 3.2,
+//         region: "us",
+//         useStrictTypeFiltering: false,
+//       };
+//     //@ts-ignore
+//     const { places } = await Place.searchByText(request);
+//     console.log(places)
+//     // if (places.length) {
+//     //   console.log(places);
+  
+//     //   const { LatLngBounds } = await google.maps.importLibrary("core");
+//     //   const bounds = new LatLngBounds();
+//     // } else {
+//     //   console.log("No results");
+//     // }
+//   }
   
 // Example usage:
 //   getPostalAddress(60.29054785500306, -109.86553068980447).then(encodedAddress => {
