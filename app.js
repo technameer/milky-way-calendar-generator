@@ -5,6 +5,11 @@ let directionsService;
 let noOfPoints;
 let infoWindowListeners = []
 let currentInfoWindow = null; 
+let waterFallsLocations = []
+let waterFallsNames = []
+let waterfallMarkers = []
+let lowestPoint;
+
 
 document.getElementById('routeForm').addEventListener('submit', function(event) {
     event.preventDefault();
@@ -24,39 +29,14 @@ function createMarker(place) {
     const markerIcon = {
         url: 'https://maps.google.com/mapfiles/kml/shapes/waterfalls.png', 
         scaledSize: new google.maps.Size(32, 32) 
-    };
-    const marker = new google.maps.Marker({
+    }
+    let marker = new google.maps.Marker({
         map: map,
         position: place.geometry.location,
         icon: markerIcon
     });
-    const photoUrl = place.photos ? place.photos[0].getUrl({ maxWidth: 200 }) : '';
-
-    const infowindowContent = `
-    <div>
-        <h3>${place.name}</h3>
-        ${photoUrl ? `<img src="${photoUrl}" alt="${place.name}" style="width:100%; max-width:200px; height:auto;"/>` : ''}
-        <p><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(place.name)}" target="_blank">Open in Google Maps</a></p>
-    </div>
-    `;
-    const infowindow = new google.maps.InfoWindow({
-        content: infowindowContent
-    });
-    google.maps.event.addListener(marker, 'click', function() {
-        // Close the currently open InfoWindow if any
-        if (currentInfoWindow) {
-            currentInfoWindow.close();
-        }
-
-        // Open the clicked marker's InfoWindow
-        if (currentInfoWindow === infowindow) {
-            infowindow.close();
-            currentInfoWindow = null; // Reset if the same InfoWindow is clicked again
-        } else {
-            infowindow.open(map, marker);
-            currentInfoWindow = infowindow; // Set the currently open InfoWindow
-        }
-    });
+    waterfallMarkers.push(marker)
+    waterFallsNames.push(place.name)
 }
 function addWaterfalls(center){
     directionsService = new google.maps.DirectionsService();
@@ -65,7 +45,8 @@ function addWaterfalls(center){
     const request = {
         location: center,
         radius: radiusCircle.getRadius(), 
-        query: 'waterfall'
+        query: 'waterfall',
+        fields: ['name', 'geometry']
     };
 
     service.textSearch(request, function(results, status) {
@@ -74,11 +55,29 @@ function addWaterfalls(center){
                 const place = results[i];
                 if (google.maps.geometry.spherical.computeDistanceBetween(center, place.geometry.location) <= radiusCircle.getRadius()) {
                     createMarker(place);
+                    waterFallsLocations.push(place.geometry.location);
                 }
             }
             map.setCenter(results[0].geometry.location);
         } else {
             console.error('Waterfalls not found:', status);
+        }
+    });
+}
+
+function getElevations(locations, noOfPoints) {
+    const elevator = new google.maps.ElevationService();
+
+    elevator.getElevationForLocations({ 'locations': locations }, function(results, status) {
+        if (status === google.maps.ElevationStatus.OK) {
+            if (results) {
+                const sortedPoints = results.sort((a, b) => a.elevation - b.elevation);
+                const highestPoints = sortedPoints.slice(-noOfPoints).reverse();
+                displayWaterFallsResults(lowestPoint, highestPoints);
+                generateWaterFallRoutes(lowestPoint, highestPoints);
+            }
+        } else {
+            alert('Elevation service failed due to: ' + status);
         }
     });
 }
@@ -120,17 +119,16 @@ function geocodeCity(city, radius) {
 function getElevationPoints(location, radius) {
     const numPoints = 512; 
     const points = generateRandomPoints(location, radius, numPoints);
-
     const elevator = new google.maps.ElevationService();
     elevator.getElevationForLocations({ 'locations': points }, function(results, status) {
         if (status === 'OK') {
             if (results) {
                 const sortedPoints = results.sort((a, b) => a.elevation - b.elevation);
-                const lowestPoint = sortedPoints[0];
+                lowestPoint = sortedPoints[0];
                 const highestPoints = sortedPoints.slice(-noOfPoints).reverse();
-
                 displayResults(lowestPoint, highestPoints);
                 generateRoutes(lowestPoint, highestPoints);
+                getElevations(waterFallsLocations, waterFallsLocations.length);
             }
         } else {
             alert('Elevation service failed due to: ' + status);
@@ -176,6 +174,27 @@ function displayResults(lowestPoint, highestPoints) {
             </div>
         `).join('')}    `;
 }
+function displayWaterFallsResults(lowestPoint, highestPoints) {
+    const resultsDiv = document.getElementById('waterfalls');
+    resultsDiv.innerHTML += `
+        
+        <div class="lowest-point-list"><p><strong>Lowest Point: </strong> ${lowestPoint.elevation.toFixed(2)} meters at (${lowestPoint.location.lat().toFixed(6)}, ${lowestPoint.location.lng().toFixed(6)})</p></div>
+        ${highestPoints.map((point, index) => `
+            <div class="list-point-div">
+                <div class="list-point-number">${index + 1}</div>
+                <div class="list-point-content">
+                    <p class="list-point" data-point="${index}">
+                        <strong>Name: </strong>
+                        ${waterFallsNames[index]}
+                    </p>
+                    <p class="list-point" data-point="${index}">
+                        <strong>Height: </strong>
+                        ${point.elevation.toFixed(2)}m
+                    </p>
+                </div>
+            </div>
+        `).join('')}    `;
+}
 
 function generateRoutes(lowestPoint, highestPoints) {
     highestPoints.forEach((highestPoint, index) => {
@@ -183,6 +202,12 @@ function generateRoutes(lowestPoint, highestPoints) {
         calculateAndDisplayRoute(lowestPoint.location, highestPoint.location, waypoint, index);
     });
     getMarkerAddress(lowestPoint.location);
+}
+function generateWaterFallRoutes(lowestPoint, highestPoints) {
+    highestPoints.forEach((highestPoint, index) => {
+        const waypoint = generateWaypoint(lowestPoint.location, highestPoint.location, index);
+        calculateAndDisplayRoute(lowestPoint.location, highestPoint.location, waypoint, index,"waterfall");
+    });
 }
 function openGoogleMaps(startLat, startLng, endLat, endLng, waypointsStr) {
 
@@ -320,8 +345,8 @@ function getMarkerAddress(position) {
       }
     });
   }
-function calculateAndDisplayRoute(start, end, waypoint, index) {
-    const listPointDivs = document.querySelectorAll(".list-point-div .list-point-content");
+function calculateAndDisplayRoute(start, end, waypoint, index,destination = "highestPoint") {
+    const listPointDivs = destination == "highestPoint" ? document.querySelectorAll(".list-point-div .list-point-content") : document.querySelectorAll("#waterfalls .list-point-div .list-point-content") ;
     const directionsRenderer = new google.maps.DirectionsRenderer({
         map: map,
         suppressMarkers: true,
@@ -347,20 +372,25 @@ function calculateAndDisplayRoute(start, end, waypoint, index) {
     }, function(response, status) {
         if (status === 'OK') {
             directionsRenderer.setDirections(response);
-            const listPoints = document.querySelectorAll(".list-point-div");
+            const listPoints = destination == "highestPoint" ? document.querySelectorAll(".list-point-div") : document.querySelectorAll("#waterfalls .list-point-div") ;
             const route = response.routes[0];
             const leg = route.legs[0];
             let currentStepIndex = 0;
             let infoWindowOpen = false;
             const polylines = [];
-            const listDivs = document.querySelectorAll(".list-point-div .list-point-content");
-            listDivs[index].innerHTML += '<p><strong>Address: </strong>' + leg.end_address + '</p>'
-            const endMarker = new google.maps.Marker({
-                position: end,
-                map: map,
-                title: `End of Route ${index + 1}`,
-                label: `H${index + 1}`
-            });
+            const listDivs = destination == "highestPoint" ? document.querySelectorAll(".list-point-div .list-point-content") : document.querySelectorAll("#waterfalls .list-point-div .list-point-content") ;
+            listDivs[index].innerHTML += destination == "highestPoint" ? '<p><strong>Address: </strong>' + leg.end_address + '</p>' : "";
+            let endMarker;
+            if(destination == "waterfall"){
+                endMarker = waterfallMarkers[index]
+            }else{
+                endMarker = new google.maps.Marker({
+                    position: end,
+                    map: map,
+                    title: `End of Route ${index + 1}`,
+                    label: `H${index + 1}`
+                });
+            }
             let startMarkerPos = startMarker.getPosition();
             let endMarkerPos = endMarker.getPosition();
             const waypoints = [{ location: waypoint, stopover: false }];
