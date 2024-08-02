@@ -57,7 +57,7 @@
             box-sizing: border-box;
         }
         #routeForm button {
-            background: #28a745;
+            background: #f11158;
             color: #fff;
             padding: 12px 20px;
             border: none;
@@ -67,7 +67,7 @@
             transition: background 0.3s ease;
         }
         #routeForm button:hover {
-            background: #218838;
+            background: #c90e49;
         }
         #map {
             height: 500px;
@@ -79,9 +79,9 @@
             box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
         .map-button{
-            background: #454db6;
+            background: #f11158;
             border: none;
-            color: white;
+            color: #f4f5f6;
             padding: 10px;
             border-radius: 10px;
             cursor: pointer;
@@ -97,7 +97,7 @@
             padding: 0 20px;
             box-sizing: border-box;
         }
-        #results, #problems {
+        #results, .waterfalls {
             background: #fff;
             padding: 20px;
             border-radius: 10px;
@@ -105,7 +105,7 @@
             width: 100%;
             max-width: 500px;
         }
-        #results h2, #problems h2 {
+        #results h2, .waterfalls h2 {
             margin-top: 0;
             font-size: 1.2rem;
             color: #333;
@@ -116,8 +116,8 @@
         .list-point-div {
             display: flex;
             align-items: center;
-            background: #28a745;
-            color: white;
+            background: #f4f5f6;
+            color: #707c84;
             padding: 10px;
             border-radius: 10px;
             margin-bottom: 10px;
@@ -127,8 +127,8 @@
             display: flex;
             flex-direction: column;
             align-items: start;
-            background: #454db6;
-            color: white;
+            background: #f11158;
+            color: #f4f5f6;
             padding: 10px;
             border-radius: 10px;
             margin-bottom: 10px;
@@ -177,13 +177,10 @@
                 max-width: 300px;
             }
             .list-point-div{
-                background: #28a745;
-                color: white;
+                background: #f4f5f6;
+                color: #707c84;
                 padding: 10px;
                 border-radius: 10px;
-            }
-            .list-point-div:hover{
-                background: #259740;
             }
         }
     </style>
@@ -202,7 +199,10 @@
     <div id="map"></div>
     <div class="display">
         <div id="results">
-            <h2>Results</h2>
+            <h2>Hiking Routes</h2>
+        </div>
+        <div class="waterfalls" id="waterfalls">
+            <h2>Waterfall Routes</h2>
         </div>
     </div>
 </body>
