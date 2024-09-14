@@ -1,209 +1,168 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Hiking Routes Finder</title>
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDkc8ns3VwvlFv2lehPmh-kRYSLtxDydtI&libraries=places"></script>
-    <script src="app.js" async></script>
-    <script>
-        (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
-          key: "AIzaSyDkc8ns3VwvlFv2lehPmh-kRYSLtxDydtI",
-          v: "weekly",
-          // Use the 'v' parameter to indicate the version to use (weekly, beta, alpha, etc.).
-          // Add other bootstrap parameters as needed, using camel case.
-        });
-    </script>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f0f4f8;
-        }
-        h1 {
-            margin: 40px 0 20px;
-            color: #333;
-            font-size: 2rem;
-            text-align: center;
-        }
-        #routeForm {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            margin-bottom: 30px;
-            width: 100%;
-            max-width: 500px;
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-        }
-        #routeForm label {
-            display: block;
-            margin-bottom: 8px;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        #routeForm input {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            box-sizing: border-box;
-        }
-        #routeForm button {
-            background: #f11158;
-            color: #fff;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.3s ease;
-        }
-        #routeForm button:hover {
-            background: #c90e49;
-        }
-        #map {
-            height: 500px;
-            width: 100%;
-            max-width: 1200px;
-            margin-bottom: 30px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-        }
-        .map-button{
-            background: #f11158;
-            border: none;
-            color: #f4f5f6;
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-        }
-        .display {
-            display: flex;
-            flex-direction: row;
-            gap: 20px;
-            justify-content: center;
-            width: 100%;
-            max-width: 1200px;
-            margin-bottom: 40px;
-            padding: 0 20px;
-            box-sizing: border-box;
-        }
-        #results, .waterfalls {
-            background: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-            width: 100%;
-            max-width: 500px;
-        }
-        #results h2, .waterfalls h2 {
-            margin-top: 0;
-            font-size: 1.2rem;
-            color: #333;
-        }
-        .list-point{
-            cursor: pointer;
-        }
-        .list-point-div {
-            display: flex;
-            align-items: center;
-            background: #f4f5f6;
-            color: #707c84;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-        .lowest-point-list{
-            display: flex;
-            flex-direction: column;
-            align-items: start;
-            background: #f11158;
-            color: #f4f5f6;
-            padding: 10px;
-            border-radius: 10px;
-            margin-bottom: 10px;
-            cursor: pointer;
-        }
-        .list-point-number {
-            font-size: 24px;
-            font-weight: bold;
-            margin-right: 15px;
-        }
-
-        .list-point-content {
-            flex: 1;
-        }
-        .list-point-content > *:not(button) {
-        margin-bottom: 10px !important;
-        }
-
-        .list-point-content p {
-            margin: 0;
-        }
-        @media (min-width: 600px) {
-        .display {
-            flex-direction: row;
-        }
-        }
-        @media (max-width: 599px) {
-            h1 {
-                font-size: 1.5rem;
-                margin: 20px 10px;
-            }
-            #routeForm {
-                padding: 15px;
-                max-width: 270px;
-            }
-            #routeForm input {
-                padding: 8px;
-                font-size: 0.9rem;
-            }
-            #routeForm button {
-                padding: 10px 16px;
-                font-size: 0.9rem;
-            }
-            #map {
-                height: 300px;
-                max-width: 300px;
-            }
-            .list-point-div{
-                background: #f4f5f6;
-                color: #707c84;
-                padding: 10px;
-                border-radius: 10px;
-            }
-        }
-    </style>
+    <title>CSV Processor Demo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
 </head>
-<body>
-    <h1>Find Hiking Routes</h1>
-    <form id="routeForm">
-        <label for="city">Location:</label>
-        <input type="text" id="city" name="city" required>
-        <label for="radius">Radius (miles):</label>
-        <input type="number" id="radius" name="radius" required>
-        <label for="points">No of routes:</label>
-        <input type="number" id="points" name="points" required>
-        <button type="submit">Find Routes</button>
-    </form>
-    <div id="map"></div>
-    <div class="display">
-        <div id="results">
-            <h2>Hiking Routes</h2>
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">CSV Processor</h1>
+         
+        <div id="step1" class="mb-8">
+            <h2 class="text-xl font-semibold mb-4">Step 1: Upload CSV</h2>
+            <div id="dropzone" class="border-dashed border-2 border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition duration-300">
+                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
+                <p class="text-gray-600">Drag and drop your CSV file here, or click to select</p>
+                <input type="file" id="fileInput" class="hidden" accept=".csv">
+            </div>
         </div>
-        <div class="waterfalls" id="waterfalls">
-            <h2>Waterfall Routes</h2>
+        
+        <div id="step2" class="mb-8 hidden">
+            <h2 class="text-xl font-semibold mb-4">Step 2: Map Fields</h2>
+            <div id="mappingContainer" class="space-y-4">
+                <!-- Mapping fields will be dynamically added here -->
+            </div>
+        </div>
+        
+        <div id="step3" class="mb-8 hidden">
+            <h2 class="text-xl font-semibold mb-4">Step 3: Review and Pay</h2>
+            <div class="bg-gray-50 p-4 rounded-lg">
+                <p class="text-lg font-medium">Total Price: $<span id="totalPrice" class="text-blue-600">0.00</span></p>
+            </div>
+            <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700">Card Number</label>
+                <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="1234 5678 9012 3456">
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
+                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="MM/YY">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">CVC</label>
+                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="123">
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-between">
+            <button id="prevBtn" class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition duration-300 hidden">Previous</button>
+            <button id="nextBtn" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300">Next</button>
         </div>
     </div>
+
+    <script>
+        const steps = ['step1', 'step2', 'step3'];
+        let currentStep = 0;
+        let csvColumns = [];
+
+        const nextBtn = document.getElementById('nextBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const mappingContainer = document.getElementById('mappingContainer');
+        const totalPriceElement = document.getElementById('totalPrice');
+
+        function updateButtons() {
+            prevBtn.style.display = currentStep > 0 ? 'block' : 'none';
+            nextBtn.textContent = currentStep === steps.length - 1 ? 'Pay Now' : 'Next';
+        }
+
+        function showStep(step) {
+            steps.forEach((s, index) => {
+                const elem = document.getElementById(s);
+                elem.style.display = index === step ? 'block' : 'none';
+            });
+            updateButtons();
+        }
+
+        function createMappingFields() {
+            mappingContainer.innerHTML = '';
+            csvColumns.forEach((column, index) => {
+                const mappingDiv = document.createElement('div');
+                mappingDiv.className = 'grid grid-cols-2 gap-4';
+                mappingDiv.innerHTML = `
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">CSV Column</label>
+                        <input type="text" value="${column}" readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Map to Field</label>
+                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
+                            <option value="">Select field</option>
+                            ${csvColumns.map((_, i) => `<option value="field${i+1}">Field ${i+1}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+                mappingContainer.appendChild(mappingDiv);
+            });
+        }
+
+        function updatePrice() {
+            const price = csvColumns.length * 1; // $1 per column
+            totalPriceElement.textContent = price.toFixed(2);
+        }
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < steps.length - 1) {
+                currentStep++;
+                showStep(currentStep);
+            } else {
+                alert('Payment processed! Check your email for the processed file.');
+            }
+        });
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                showStep(currentStep);
+            }
+        });
+
+        dropzone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const contents = e.target.result;
+                    const firstLine = contents.split('\n')[0];
+                    csvColumns = firstLine.split(',').map(col => col.trim());
+                    createMappingFields();
+                    updatePrice();
+                    currentStep++;
+                    showStep(currentStep);
+                };
+                reader.readAsText(file);
+            }
+        });
+
+        dropzone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropzone.classList.add('border-blue-500');
+        });
+
+        dropzone.addEventListener('dragleave', () => {
+            dropzone.classList.remove('border-blue-500');
+        });
+
+        dropzone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropzone.classList.remove('border-blue-500');
+            const file = e.dataTransfer.files[0];
+            if (file) {
+                fileInput.files = e.dataTransfer.files;
+                fileInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+        showStep(currentStep);
+    </script>
 </body>
 </html>
