@@ -3,166 +3,98 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Processor Demo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/js/all.min.js"></script>
+    <title>Survey Analysis Demo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center">
-    <div class="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
-        <h1 class="text-3xl font-bold mb-6 text-center text-blue-600">CSV Processor</h1>
-         
-        <div id="step1" class="mb-8">
-            <h2 class="text-xl font-semibold mb-4">Step 1: Upload CSV</h2>
-            <div id="dropzone" class="border-dashed border-2 border-gray-300 rounded-lg p-8 text-center cursor-pointer hover:border-blue-500 transition duration-300">
-                <i class="fas fa-cloud-upload-alt text-4xl text-gray-400 mb-4"></i>
-                <p class="text-gray-600">Drag and drop your CSV file here, or click to select</p>
-                <input type="file" id="fileInput" class="hidden" accept=".csv">
-            </div>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
+        <h1 class="text-2xl font-bold mb-4">Survey Analysis Demo</h1>
+        
+        <div class="mb-4">
+            <h2 class="text-xl font-semibold mb-2">Survey Responses</h2>
+            <div id="surveyInputs"></div>
+            <button id="analyzeSurvey" class="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Analyze Survey</button>
         </div>
         
-        <div id="step2" class="mb-8 hidden">
-            <h2 class="text-xl font-semibold mb-4">Step 2: Map Fields</h2>
-            <div id="mappingContainer" class="space-y-4">
-                <!-- Mapping fields will be dynamically added here -->
-            </div>
-        </div>
-        
-        <div id="step3" class="mb-8 hidden">
-            <h2 class="text-xl font-semibold mb-4">Step 3: Review and Pay</h2>
-            <div class="bg-gray-50 p-4 rounded-lg">
-                <p class="text-lg font-medium">Total Price: $<span id="totalPrice" class="text-blue-600">0.00</span></p>
-            </div>
-            <div class="mt-4">
-                <label class="block text-sm font-medium text-gray-700">Card Number</label>
-                <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="1234 5678 9012 3456">
-            </div>
-            <div class="mt-4 grid grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">Expiry Date</label>
-                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="MM/YY">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700">CVC</label>
-                    <input type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" placeholder="123">
-                </div>
-            </div>
-        </div>
-        
-        <div class="flex justify-between">
-            <button id="prevBtn" class="px-6 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400 transition duration-300 hidden">Previous</button>
-            <button id="nextBtn" class="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition duration-300">Next</button>
+        <div class="mt-8">
+            <h2 class="text-xl font-semibold mb-2">Analysis Results</h2>
+            <table id="resultsTable" class="w-full border-collapse border border-gray-300">
+                <thead>
+                    <tr class="bg-gray-100">
+                        <th class="border border-gray-300 p-2">Candidate</th>
+                        <th class="border border-gray-300 p-2">Cost</th>
+                        <th class="border border-gray-300 p-2">Must Have</th>
+                        <th class="border border-gray-300 p-2">Score</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
         </div>
     </div>
 
     <script>
-        const steps = ['step1', 'step2', 'step3'];
-        let currentStep = 0;
-        let csvColumns = [];
+        // Sample data
+        const candidates = [
+            { name: 'Candidate A', speed: 4, reliability: 5, cost: 1000 },
+            { name: 'Candidate B', speed: 2, reliability: 6, cost: 800 },
+            { name: 'Candidate C', speed: 6, reliability: 3, cost: 1200 }
+        ];
 
-        const nextBtn = document.getElementById('nextBtn');
-        const prevBtn = document.getElementById('prevBtn');
-        const dropzone = document.getElementById('dropzone');
-        const fileInput = document.getElementById('fileInput');
-        const mappingContainer = document.getElementById('mappingContainer');
-        const totalPriceElement = document.getElementById('totalPrice');
+        const surveyQuestions = [
+            { id: 'speed', question: 'How important is speed to you on a scale of 1 - 6?' },
+            { id: 'reliability', question: 'How important is reliability to you on a scale of 1 - 6?' }
+        ];
 
-        function updateButtons() {
-            prevBtn.style.display = currentStep > 0 ? 'block' : 'none';
-            nextBtn.textContent = currentStep === steps.length - 1 ? 'Pay Now' : 'Next';
-        }
-
-        function showStep(step) {
-            steps.forEach((s, index) => {
-                const elem = document.getElementById(s);
-                elem.style.display = index === step ? 'block' : 'none';
-            });
-            updateButtons();
-        }
-
-        function createMappingFields() {
-            mappingContainer.innerHTML = '';
-            csvColumns.forEach((column, index) => {
-                const mappingDiv = document.createElement('div');
-                mappingDiv.className = 'grid grid-cols-2 gap-4';
-                mappingDiv.innerHTML = `
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">CSV Column</label>
-                        <input type="text" value="${column}" readonly class="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 shadow-sm">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700">Map to Field</label>
-                        <select class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50">
-                            <option value="">Select field</option>
-                            ${csvColumns.map((_, i) => `<option value="field${i+1}">Field ${i+1}</option>`).join('')}
-                        </select>
-                    </div>
-                `;
-                mappingContainer.appendChild(mappingDiv);
-            });
-        }
-
-        function updatePrice() {
-            const price = csvColumns.length * 1; // $1 per column
-            totalPriceElement.textContent = price.toFixed(2);
-        }
-
-        nextBtn.addEventListener('click', () => {
-            if (currentStep < steps.length - 1) {
-                currentStep++;
-                showStep(currentStep);
-            } else {
-                alert('Payment processed! Check your email for the processed file.');
-            }
+        // Generate survey inputs
+        const surveyInputs = document.getElementById('surveyInputs');
+        surveyQuestions.forEach(q => {
+            const div = document.createElement('div');
+            div.className = 'mb-2';
+            div.innerHTML = `
+                <label class="block">${q.question}</label>
+                <input type="number" id="${q.id}" min="1" max="6" class="border border-gray-300 p-1 rounded">
+            `;
+            surveyInputs.appendChild(div);
         });
 
-        prevBtn.addEventListener('click', () => {
-            if (currentStep > 0) {
-                currentStep--;
-                showStep(currentStep);
-            }
-        });
+        // Analyze survey
+        document.getElementById('analyzeSurvey').addEventListener('click', () => {
+            const surveyResponses = surveyQuestions.reduce((acc, q) => {
+                acc[q.id] = parseInt(document.getElementById(q.id).value) || 0;
+                return acc;
+            }, {});
 
-        dropzone.addEventListener('click', () => {
-            fileInput.click();
-        });
+            const results = candidates.map(candidate => {
+                let score = 0;
+                let mustHave = true;
 
-        fileInput.addEventListener('change', (event) => {
-            const file = event.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const contents = e.target.result;
-                    const firstLine = contents.split('\n')[0];
-                    csvColumns = firstLine.split(',').map(col => col.trim());
-                    createMappingFields();
-                    updatePrice();
-                    currentStep++;
-                    showStep(currentStep);
+                for (const [key, importance] of Object.entries(surveyResponses)) {
+                    score += candidate[key] * importance;
+                    if (importance >= 5 && candidate[key] < 5) {
+                        mustHave = false;
+                    }
+                }
+
+                return {
+                    ...candidate,
+                    score,
+                    mustHave
                 };
-                reader.readAsText(file);
-            }
-        });
+            }).sort((a, b) => b.score - a.score);
 
-        dropzone.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropzone.classList.add('border-blue-500');
+            // Update results table
+            const resultsBody = document.getElementById('resultsBody');
+            resultsBody.innerHTML = '';
+            results.forEach(result => {
+                const row = resultsBody.insertRow();
+                row.innerHTML = `
+                    <td class="border border-gray-300 p-2">${result.name}</td>
+                    <td class="border border-gray-300 p-2">$${result.cost}</td>
+                    <td class="border border-gray-300 p-2">${result.mustHave ? 'Yes' : 'No'}</td>
+                    <td class="border border-gray-300 p-2">${result.score}</td>
+                `;
+            });
         });
-
-        dropzone.addEventListener('dragleave', () => {
-            dropzone.classList.remove('border-blue-500');
-        });
-
-        dropzone.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropzone.classList.remove('border-blue-500');
-            const file = e.dataTransfer.files[0];
-            if (file) {
-                fileInput.files = e.dataTransfer.files;
-                fileInput.dispatchEvent(new Event('change'));
-            }
-        });
-
-        showStep(currentStep);
     </script>
 </body>
 </html>
