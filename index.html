@@ -3,116 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Survey Analysis Demo</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Milky Way Calendar Generator</title>
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #0d1b2a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: #fff;
+}
+
+.container {
+    background-color: #1b263b;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    text-align: center;
+}
+
+h1 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    text-align: left;
+    margin-bottom: 5px;
+}
+
+input {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 5px;
+}
+
+button {
+    background-color: #00aaff;
+    color: #fff;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #0077cc;
+}
+
+#calendar-section {
+    margin-top: 20px;
+}
+
+#milky-way-calendar {
+    width: 100%;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none;
+}
+
+    </style>
 </head>
-<body class="bg-gray-100 min-h-screen">
-    <div class="container mx-auto py-8 px-4">
-        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div class="bg-blue-600 p-6">
-                <h1 class="text-3xl font-bold text-white">Survey Analysis Demo</h1>
-            </div>
+<body>
+    <div class="container">
+        <h1>Milky Way Calendar Generator</h1>
+        <form id="calendar-form">
+            <label for="latitude">Latitude:</label>
+            <input type="text" id="latitude" name="latitude" placeholder="e.g., 37.7749" required>
             
-            <div class="p-6">
-                <div class="mb-8">
-                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Survey Responses</h2>
-                    <div id="surveyInputs" class="grid gap-4 md:grid-cols-2"></div>
-                    <button id="analyzeSurvey" class="mt-6 bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50">
-                        Analyze Survey
-                    </button>
-                </div>
-                
-                <div id="resultsSection" class="mt-8 hidden">
-                    <h2 class="text-2xl font-semibold mb-4 text-gray-800">Analysis Results</h2>
-                    <div class="overflow-x-auto">
-                        <table id="resultsTable" class="w-full border-collapse">
-                            <thead>
-                                <tr class="bg-gray-200">
-                                    <th class="border border-gray-300 p-3 text-left">Candidate</th>
-                                    <th class="border border-gray-300 p-3 text-left">Cost</th>
-                                    <th class="border border-gray-300 p-3 text-left">Must Have</th>
-                                    <th class="border border-gray-300 p-3 text-left">Score</th>
-                                </tr>
-                            </thead>
-                            <tbody id="resultsBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+            <label for="longitude">Longitude:</label>
+            <input type="text" id="longitude" name="longitude" placeholder="e.g., -122.4194" required>
+            
+            <button type="submit">Generate Calendar</button>
+        </form>
+        
+        <div id="calendar-section" class="hidden">
+            <h2>Your Milky Way Calendar</h2>
+            <img src="/mnt/data/A_beautiful_Milky_Way_calendar_showing_the_phases_.png" alt="Milky Way Calendar" id="milky-way-calendar">
         </div>
     </div>
-
     <script>
-        // Sample data
-        const candidates = [
-            { name: 'Candidate A', speed: 4, reliability: 5, cost: 1000 },
-            { name: 'Candidate B', speed: 2, reliability: 6, cost: 800 },
-            { name: 'Candidate C', speed: 6, reliability: 3, cost: 1200 }
-        ];
+        document.getElementById('calendar-form').addEventListener('submit', function(e) {
+    e.preventDefault();
 
-        const surveyQuestions = [
-            { id: 'speed', question: 'How important is speed to you on a scale of 1 - 6?' },
-            { id: 'reliability', question: 'How important is reliability to you on a scale of 1 - 6?' }
-        ];
+    const latitude = document.getElementById('latitude').value;
+    const longitude = document.getElementById('longitude').value;
 
-        // Generate survey inputs
-        const surveyInputs = document.getElementById('surveyInputs');
-        surveyQuestions.forEach(q => {
-            const div = document.createElement('div');
-            div.className = 'mb-4';
-            div.innerHTML = `
-                <label class="block text-gray-700 text-sm font-bold mb-2" for="${q.id}">${q.question}</label>
-                <input type="number" id="${q.id}" min="1" max="6" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
-            `;
-            surveyInputs.appendChild(div);
-        });
+    if (latitude && longitude) {
+        alert(`Generating Milky Way Calendar for Latitude: ${latitude}, Longitude: ${longitude}`);
+        
+        // Show the calendar section
+        const calendarSection = document.getElementById('calendar-section');
+        calendarSection.classList.remove('hidden');
+    } else {
+        alert('Please enter valid latitude and longitude!');
+    }
+});
 
-        // Analyze survey
-        document.getElementById('analyzeSurvey').addEventListener('click', () => {
-            const surveyResponses = surveyQuestions.reduce((acc, q) => {
-                acc[q.id] = parseInt(document.getElementById(q.id).value) || 0;
-                return acc;
-            }, {});
-
-            const results = candidates.map(candidate => {
-                let score = 0;
-                let mustHave = true;
-
-                for (const [key, importance] of Object.entries(surveyResponses)) {
-                    score += candidate[key] * importance;
-                    if (importance >= 5 && candidate[key] < 5) {
-                        mustHave = false;
-                    }
-                }
-
-                return {
-                    ...candidate,
-                    score,
-                    mustHave
-                };
-            }).sort((a, b) => b.score - a.score);
-
-            // Update results table
-            const resultsBody = document.getElementById('resultsBody');
-            resultsBody.innerHTML = '';
-            results.forEach((result, index) => {
-                const row = resultsBody.insertRow();
-                row.className = index % 2 === 0 ? 'bg-gray-50' : 'bg-white';
-                row.innerHTML = `
-                    <td class="border border-gray-300 p-3">${result.name}</td>
-                    <td class="border border-gray-300 p-3">$${result.cost}</td>
-                    <td class="border border-gray-300 p-3">
-                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${result.mustHave ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
-                            ${result.mustHave ? 'Yes' : 'No'}
-                        </span>
-                    </td>
-                    <td class="border border-gray-300 p-3">${result.score}</td>
-                `;
-            });
-
-            // Show results section
-            document.getElementById('resultsSection').classList.remove('hidden');
-        });
     </script>
 </body>
 </html>
