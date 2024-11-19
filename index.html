@@ -3,118 +3,159 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Milky Way Calendar Generator</title>
+    <title>Photo Tile Mural Demo</title>
     <style>
-        * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-body {
-    background-color: #0d1b2a;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    color: #fff;
-}
-
-.container {
-    background-color: #1b263b;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    width: 300px;
-    text-align: center;
-}
-
-h1 {
-    font-size: 1.5rem;
-    margin-bottom: 20px;
-}
-
-label {
-    display: block;
-    text-align: left;
-    margin-bottom: 5px;
-}
-
-input {
-    width: 100%;
-    padding: 8px;
-    margin-bottom: 15px;
-    border: none;
-    border-radius: 5px;
-}
-
-button {
-    background-color: #00aaff;
-    color: #fff;
-    border: none;
-    padding: 10px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #0077cc;
-}
-
-#calendar-section {
-    margin-top: 20px;
-}
-
-#milky-way-calendar {
-    width: 100%;
-    border-radius: 10px;
-    margin-top: 10px;
-}
-
-.hidden {
-    display: none;
-}
-
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        h1, h3 {
+            text-align: center;
+            color: #4CAF50;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        input, select, button {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 0 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        input:focus, select:focus, button:hover {
+            outline: none;
+            border-color: #4CAF50;
+        }
+        button {
+            background-color: #4CAF50;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #price-output, #order-output {
+            font-size: 16px;
+            margin: 20px 0;
+            text-align: center;
+            font-weight: bold;
+        }
+        .grid {
+            margin: 20px auto;
+            display: grid;
+            gap: 2px;
+            background: #ddd;
+            max-width: 80%;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .tile {
+            background: #4CAF50;
+            border: 1px solid #333;
+            aspect-ratio: 1 / 1;
+        }
+        #grid-container {
+            text-align: center;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Milky Way Calendar Generator</h1>
-        <form id="calendar-form">
-            <label for="latitude">Latitude:</label>
-            <input type="text" id="latitude" name="latitude" placeholder="e.g., 37.7749" required>
-            
-            <label for="longitude">Longitude:</label>
-            <input type="text" id="longitude" name="longitude" placeholder="e.g., -122.4194" required>
-            
-            <button type="submit">Generate Calendar</button>
-        </form>
-        
-        <div id="calendar-section" class="hidden">
-            <h2>Your Milky Way Calendar</h2>
-            <img src="A_beautiful_Milky_Way_calendar_showing_the_phases_.webp" alt="Milky Way Calendar" id="milky-way-calendar">
-        </div>
+    <h1>Photo Tile Mural Demo</h1>
+    <div class="form-group">
+        <label for="width">Width (cm):</label>
+        <input type="number" id="width" placeholder="Enter width">
     </div>
+    <div class="form-group">
+        <label for="height">Height (cm):</label>
+        <input type="number" id="height" placeholder="Enter height">
+    </div>
+    <div class="form-group">
+        <label for="tile-type">Tile Type:</label>
+        <select id="tile-type">
+            <option value="10">Small (10x10 cm) - $10</option>
+            <option value="15">Medium (15x15 cm) - $15</option>
+            <option value="20">Large (20x20 cm) - $20</option>
+        </select>
+    </div>
+    <div class="form-group">
+        <label for="finish">Finish:</label>
+        <select id="finish">
+            <option value="0">Gloss</option>
+            <option value="5">Satin (+$5)</option>
+            <option value="10">Matt (+$10)</option>
+        </select>
+    </div>
+    <button onclick="calculatePrice()">Calculate Price</button>
+    <p id="price-output"></p>
+    <div id="grid-container"></div>
+    <h3>Place Order</h3>
+    <div class="form-group">
+        <label for="email">Your Email:</label>
+        <input type="email" id="email" placeholder="Enter your email">
+    </div>
+    <button onclick="placeOrder()">Place Order</button>
+    <p id="order-output"></p>
     <script>
-        document.getElementById('calendar-form').addEventListener('submit', function(e) {
-    e.preventDefault();
+        function calculatePrice() {
+            const width = parseFloat(document.getElementById('width').value) || 0;
+            const height = parseFloat(document.getElementById('height').value) || 0;
+            const tileType = parseFloat(document.getElementById('tile-type').value);
+            const finish = parseFloat(document.getElementById('finish').value);
 
-    const latitude = document.getElementById('latitude').value;
-    const longitude = document.getElementById('longitude').value;
+            const area = width * height; // Total area in cm²
+            const tileArea = tileType * tileType; // Tile area in cm²
+            const tilesNeeded = Math.ceil(area / tileArea);
 
-    if (latitude && longitude) {
-        alert(`Generating Milky Way Calendar for Latitude: ${latitude}, Longitude: ${longitude}`);
-        
-        // Show the calendar section
-        const calendarSection = document.getElementById('calendar-section');
-        calendarSection.classList.remove('hidden');
-    } else {
-        alert('Please enter valid latitude and longitude!');
-    }
-});
+            const basePrice = tilesNeeded * tileType; // Price per tile
+            const totalPrice = basePrice + finish;
 
+            document.getElementById('price-output').textContent = 
+                `Total Price: $${totalPrice} (${tilesNeeded} tiles)`;
+
+            displayGrid(width, height, tileType);
+        }
+
+        function displayGrid(width, height, tileSize) {
+            const gridContainer = document.getElementById('grid-container');
+            gridContainer.innerHTML = '';
+            const cols = Math.ceil(width / tileSize);
+            const rows = Math.ceil(height / tileSize);
+
+            gridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            gridContainer.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
+            gridContainer.className = 'grid';
+
+            for (let i = 0; i < cols * rows; i++) {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                gridContainer.appendChild(tile);
+            }
+        }
+
+        function placeOrder() {
+            const email = document.getElementById('email').value;
+            const orderDetails = document.getElementById('price-output').textContent;
+
+            if (!email) {
+                document.getElementById('order-output').textContent = 
+                    'Please enter your email to place the order.';
+                return;
+            }
+
+            document.getElementById('order-output').textContent = 
+                `Order placed! Details sent to ${email}.\nOrder Details: ${orderDetails}`;
+        }
     </script>
 </body>
 </html>
